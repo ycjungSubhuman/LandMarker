@@ -109,7 +109,6 @@ int main(int argc, char **argv)
     Eigen::MatrixXd V, C;
     Eigen::MatrixXi F;
     read_obj(options.path_obj, V, C, F);
-    std::cout << C << std::endl;
     viewer.data().set_mesh(V, F);
     viewer.data().set_colors(C);
     std::vector<int> workspace_landmark;
@@ -117,7 +116,9 @@ int main(int argc, char **argv)
     if(options.path_input_landmark.has_value())
     {
         Eigen::VectorXi landmarks_input = 
-             readTxt<int>(*options.path_input_landmark);
+             readTxt<float>(*options.path_input_landmark).cast<int>(); // To read numpy.savetxt format, read in float then cast into int.
+
+        std::cout << landmarks_input << std::endl;
         workspace_landmark.resize(landmarks_input.size());
         for(int i=0; i<landmarks_input.size(); i++)
         {
@@ -136,8 +137,15 @@ int main(int argc, char **argv)
 
             Eigen::RowVector3d c;
             c << 0.0, 1.0, 0.0;
+
+            Eigen::RowVector4f c_label;
+            c_label << 0.0, 0.0, 0.0, 1.0;
+            Eigen::RowVector3d offset_label;
+            offset_label << 0.0, 0.0, 0.0;
+
             viewer.data().add_points(pos, c);
-            viewer.data().add_label(pos, std::to_string(i + 1));
+            viewer.data().add_label(pos + offset_label, std::to_string(i + 1));
+            viewer.data().label_color = c_label;
         }
     };
 
@@ -192,6 +200,7 @@ int main(int argc, char **argv)
     };
 
     viewer.data().point_size = 10.0f;
+    viewer.data().show_custom_labels = true;
     update(viewer);
     viewer.launch();
 
